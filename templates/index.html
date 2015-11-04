@@ -23,7 +23,7 @@
 
 </head>
 <body>
-<div class="container">
+<div class="container1">
 
 <!-- Flashed messages before content -->
 {% with messages = get_flashed_messages() %}
@@ -35,7 +35,20 @@
     </ul>
   {% endif %}
 {% endwith %}
+<div class="row">
+    <div class="col-md-2">
+    <input type="text" class="form-control"
+     name="Date" id="Date" value="07/30/1994"/>
+  </div>
+  <div class="col-md-6">
+    <input type="text" class="form-control"
+      name="Memo" id="Memo" value="Memo" />
+  </div>
+<button id="myBtn">Submit</button>
+ </div>
 
+</div>
+<div class="container2" id="container2">
 <h1>Memos</h1>
 
 {% if session.memos %}
@@ -45,17 +58,93 @@
   <div class="col-md-2">
     {{ memo.date | humanize }}
   </div>
-  <div class="col-md-10">
+  <div class="col-md-6">
     {{ memo.text }}
   </div>
+  <button id="myBtnDel" class="myBtnDel" value={{memo._id}}>Delete</button>
   </div> <!-- row -->
   </div> <!-- memo -->
+  
   {% endfor %}
 {% else %}
   <p>No memos for you. </p>  
 {% endif %}
 
- 
+<script type="text/javascript">
+
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+
+  $(document).ready(function(){
+  
+
+   // Do the following when the page is finished loading
+      // When a field named 'miles' is changed ...
+      $("#myBtn").click(function(){
+
+              var date = document.getElementById("Date").value;
+              var memo = document.getElementById("Memo").value;
+
+              //$.post( '../_create', { date: date, memo: memo })
+               //.done(function( data ) {
+              // alert( "Data Loaded: " + data );
+              // });
+              $.getJSON($SCRIPT_ROOT + '/_test',
+                  // The object to pass to the server
+                  { date: date, memo: memo},
+                  // The function to call with the response
+                  function(data) {
+                     var times = data.result;
+                     obj = JSON.parse(times);
+                    // $("#container2").load(location.href + " #container2");
+
+
+                 //$("#container2").load(location.href);
+		location.reload();
+                   //  alert("Got a response: " +  times);
+                  }); // End of the call to getJSON
+
+              //SCRIPT_ROOT + 
+               //$.getJSON('../_create',
+                  // The object to pass to the server
+              // { date: date, memo: memo}, function(data) {
+               //      var times = data.result;
+                //     obj = JSON.parse(times);
+                     
+                //     alert("Got a response: " +  times);
+//}); // End of the call to getJSON
+          });  // End of the function to be called when field changes
+              $(this).find(".myBtnDel").click(function(){
+
+              var objId = $(this).val();
+     
+                  $.getJSON($SCRIPT_ROOT + '/_delId',
+                  // The object to pass to the server
+                  { objId: objId },
+                  // The function to call with the response
+                  function(data) {
+                     var times = data.result;
+                     obj = JSON.parse(times);
+                     //$("#container2").load(location.href + " #container2");
+	             location.reload();
+                     //alert("Got a response: " +  times);
+                  }); // End of the call to getJSON
+
+              //SCRIPT_ROOT + 
+               //$.getJSON('../_create',
+                  // The object to pass to the server
+              // { date: date, memo: memo}, function(data) {
+               //      var times = data.result;
+                //     obj = JSON.parse(times);
+                     
+                //     alert("Got a response: " +  times);
+//}); // End of the call to getJSON
+          });  // End of the function to be called when field changes
+
+
+     });   // end of what we do on document ready
+
+</script>
+
 
 </div> <!-- container -->
 </body>

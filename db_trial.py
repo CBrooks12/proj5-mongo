@@ -35,7 +35,7 @@ record = { "type": "dated_memo",
            "text": "Sample one day later"
           }
 collection.insert(record)
-
+collection.remove({})
 #
 # Read database --- May be useful to see what is in there,
 # even after you have a working 'insert' operation in the flask app,

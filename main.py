@@ -18,6 +18,7 @@ import flask
 from flask import render_template
 from flask import request
 from flask import url_for
+from flask import jsonify # For AJAX transactions
 
 import json
 import logging
@@ -28,8 +29,9 @@ import datetime # But we may still need time
 from dateutil import tz  # For interpreting local times
 
 # Mongo database
+import pymongo
 from pymongo import MongoClient
-
+from bson.objectid import ObjectId
 
 ###
 # Globals
@@ -42,7 +44,7 @@ try:
     dbclient = MongoClient(CONFIG.MONGO_URL)
     db = dbclient.memos
     collection = db.dated
-
+    #collection = collection.find().sort( { date: 1 } )
 except:
     print("Failure opening database.  Is Mongo running? Correct password?")
     sys.exit(1)
@@ -63,12 +65,28 @@ def index():
       app.logger.debug("Memo: " + str(memo))
   return flask.render_template('index.html')
 
+@app.route("/_test")
+def testing():
+    app.logger.debug("Got a JSON request");
+    date = request.args.get('date',0,type=str)
+    base = arrow.get(date,'MM/DD/YYYY')
+    base = base.timestamp
+    memo = request.args.get('memo', 1, type=str)
+    record = {'type': 'dated_memo', 'date':base, 'text': memo}
+    d = {'date': base, 'memo': memo}
+    collection.insert(record)
+    d = json.dumps(d)
+    return jsonify(result = d)
 
-# We don't have an interface for creating memos yet
-# @app.route("/create")
-# def create():
-#     app.logger.debug("Create")
-#     return flask.render_template('create.html')
+@app.route("/_delId")
+def del_memo():
+    app.logger.debug("Got a JSON request");
+    objId = request.args.get('objId',0,type=str)
+    d = {'objId': objId}
+    #x = ObjectId(objId)
+    collection.remove({"_id": ObjectId(objId)});
+    d = json.dumps(d)
+    return jsonify(result = d)
 
 
 @app.errorhandler(404)
@@ -126,9 +144,14 @@ def get_memos():
     can be inserted directly in the 'session' object.
     """
     records = [ ]
-    for record in collection.find( { "type": "dated_memo" } ):
+    #tempCollection = collection.find().sort( { date: 1 } )
+    for record in collection.find( { "type": "dated_memo" } ).sort("date",1):
+    #for record in collection.find().sort( { date: -1 } ):
         record['date'] = arrow.get(record['date']).isoformat()
-        del record['_id']
+        try:
+            record['_id'] = str(record['_id'])
+        except:
+            del record['_id']
         records.append(record)
     return records 
 
